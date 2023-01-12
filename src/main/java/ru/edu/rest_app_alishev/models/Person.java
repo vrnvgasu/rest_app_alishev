@@ -1,5 +1,6 @@
 package ru.edu.rest_app_alishev.models;
 
+import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,14 +35,28 @@ public class Person {
   @NotEmpty(message = "Email should not be empty")
   private String email;
 
+  @Column(name = "created_at")
+  private LocalDateTime createdAt;
+
+  @Column(name = "updated_at")
+  private LocalDateTime updateddAt;
+
+  @Column(name = "created_who")
+  @NotEmpty
+  private String createdWho;
+
   public Person() {
   }
 
-  public Person(int id, String name, int age, String email) {
+  public Person(int id, String name, int age, String email, LocalDateTime createdAt, LocalDateTime updateddAt,
+      String createdWho) {
     this.id = id;
     this.name = name;
     this.age = age;
     this.email = email;
+    this.createdAt = createdAt;
+    this.updateddAt = updateddAt;
+    this.createdWho = createdWho;
   }
 
   public int getId() {
@@ -74,6 +89,30 @@ public class Person {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public LocalDateTime getUpdateddAt() {
+    return updateddAt;
+  }
+
+  public void setUpdateddAt(LocalDateTime updateddAt) {
+    this.updateddAt = updateddAt;
+  }
+
+  public String getCreatedWho() {
+    return createdWho;
+  }
+
+  public void setCreatedWho(String createdWho) {
+    this.createdWho = createdWho;
   }
 
 }

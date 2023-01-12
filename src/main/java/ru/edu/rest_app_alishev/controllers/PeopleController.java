@@ -1,7 +1,9 @@
 package ru.edu.rest_app_alishev.controllers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.edu.rest_app_alishev.dto.PersonDTO;
 import ru.edu.rest_app_alishev.models.Person;
 import ru.edu.rest_app_alishev.services.PeopleService;
 import ru.edu.rest_app_alishev.util.PersonErrorResponse;
@@ -25,30 +28,34 @@ public class PeopleController {
 
   private final PeopleService peopleService;
 
-  public PeopleController(PeopleService peopleService) {
+  private final ModelMapper modelMapper;
+
+  public PeopleController(PeopleService peopleService, ModelMapper modelMapper) {
     this.peopleService = peopleService;
+    this.modelMapper = modelMapper;
   }
 
   @GetMapping()
-  public List<Person> getPeople() {
+  public List<PersonDTO> getPeople() {
     // Jakcson конвертирует объекты в json в ответе из-за аннотации @RestController
-    return peopleService.findAll();
+    return peopleService.findAll().stream()
+        .map(this::convertToPersonDTO).collect(Collectors.toList());
   }
 
   @GetMapping("/{id}")
-  public Person getOne(@PathVariable("id") int id) {
+  public PersonDTO getOne(@PathVariable("id") int id) {
     // Jakcson конвертирует объект в json в ответе из-за аннотации @RestController
-    return peopleService.findOne(id);
+    return convertToPersonDTO(peopleService.findOne(id));
   }
 
   @PostMapping
-  public ResponseEntity<HttpStatus> create(@RequestBody @Valid Person person,
+  public ResponseEntity<HttpStatus> create(@RequestBody @Valid PersonDTO personDTO,
       BindingResult bindingResult) {
     if (bindingResult.hasErrors()) {
       StringBuilder errorMessage = new StringBuilder();
       List<FieldError> errors = bindingResult.getFieldErrors();
 
-      for (FieldError error: errors) {
+      for (FieldError error : errors) {
         errorMessage.append(error.getField())
             .append(" - ")
             .append(error.getDefaultMessage())
@@ -58,10 +65,19 @@ public class PeopleController {
       throw new PersonNotCreatedException(errorMessage.toString());
     }
 
-    peopleService.save(person);
+    peopleService.save(convertToPerson(personDTO));
 
     // ответ с пустым телом и статусом 200
     return new ResponseEntity<>(HttpStatus.OK);
+  }
+
+  private Person convertToPerson(PersonDTO personDTO) {
+    // находит все одинаковые поля в классах и заполняет их
+    return modelMapper.map(personDTO, Person.class);
+  }
+
+  private PersonDTO convertToPersonDTO(Person person) {
+    return modelMapper.map(person, PersonDTO.class);
   }
 
   @ExceptionHandler // говорит, что перехватывает исключение
